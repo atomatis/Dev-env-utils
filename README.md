@@ -1,9 +1,16 @@
 # dproxy
 
 Dproxy permet de trvailler en // sur de multiples projets utilisant docker.
+
+## Installation
+
+	git clone gitlab@gitlab.smol.org:smol/dproxy.git ~/Development/dproxy
+	cd ~/Development/dproxy
+	docker-compose up -d
+
 Il expose sur le port `80` tous les containers ayant un port publié et la variable d'env `VIRTUAL_HOST` définie.
 
-exemple avec docker-compose: 
+exemple d'application avec docker-compose: 
 
 	mysql:
 	  image: percona
