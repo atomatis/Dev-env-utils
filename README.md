@@ -37,12 +37,12 @@ exemple avec docker-compose:
 	    - "80"
 
 
-Dans cet exemple, 2 services sont définis, qu'il faut également ajouter au fichier hosts de la machine :
+Dans cet exemple, 2 services sont définis, qu'il faut également ajouter au fichier hosts de la machine (l'ip peut varier suivant les installations):
 
 	10.211.55.3 lms.docker
 	10.211.55.3 mc.lms.docker
 
-Le port mysql n'a pas été configuré, car VIRUAL_HOST n'est pas défini. dproxy ne prend en charge pour le moment que le http.
+Le port mysql n'a pas été configuré, car VIRTUAL_HOST n'est pas défini. dproxy ne prend en charge pour le moment que le http.
 
 Pour accéder au mysql, il faut trouver le port de cette façon :
 
