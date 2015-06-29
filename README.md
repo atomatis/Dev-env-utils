@@ -8,7 +8,7 @@ Dproxy permet de trvailler en // sur de multiples projets utilisant docker.
 	cd ~/Development/dproxy
 	docker-compose up -d
 
-Il expose sur le port `80` tous les containers ayant un port publié et la variable d'env `VIRTUAL_HOST` définie.
+Il expose sur le port `80` tous les containers ayant un port publié et la variable d'env `VIRTUAL_HOST` définie. Lorsque plusieurs ports sont publiés, il faut préciser le port à utiliser via la variable `VIRTUAL_PORT`. Cette publication pouvant être implicite, il est recommandé de toujours ajouter `VIRTUAL_PORT`.
 
 exemple d'application avec docker-compose: 
 
@@ -28,6 +28,7 @@ exemple d'application avec docker-compose:
 	  build: ./mailcatcher
 	  environment:
 	   - VIRTUAL_HOST=mc.lms.docker
+	   - VIRTUAL_PORT=1080
 	  ports:
 	    - "1080"
 	
@@ -40,6 +41,7 @@ exemple d'application avec docker-compose:
 	    - mailcatcher
 	  environment:
 	   - VIRTUAL_HOST=lms.docker
+	   - VIRTUAL_PORT=80
 	  ports:
 	    - "80"
 
