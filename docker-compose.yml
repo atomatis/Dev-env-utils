@@ -1,0 +1,15 @@
+dockergen:
+  image: jwilder/docker-gen
+  command: -notify-sighup dproxy_haproxy_1 -watch -only-published /etc/docker-gen/templates/haproxy.tmpl /etc/haproxy/haproxy.cfg
+  volumes_from:
+    - haproxy
+  volumes:
+    - "/var/run/docker.sock:/tmp/docker.sock:ro"
+    - "/data/dproxy/templates:/etc/docker-gen/templates"
+haproxy:
+  image: vixns/haproxy:1.5.12
+  volumes:
+    - "/data/dproxy/config:/etc/haproxy"
+  ports:
+    - "0.0.0.0:80:80"
+    - "0.0.0.0:9302:9302"

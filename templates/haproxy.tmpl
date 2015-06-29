@@ -1,0 +1,30 @@
+global
+  maxconn 2000
+
+defaults
+  timeout connect 5000
+  timeout client 50000
+  timeout server 500000
+  mode http
+  option http-server-close
+
+listen monitor *:9302
+  mode http  
+  stats enable
+  stats uri /
+  stats refresh   5s
+
+userlist UsersFor_Dev
+  user dev insecure-password sm0l
+
+frontend in *:80
+  acl AuthOkay_Dev http_auth(UsersFor_Dev)
+  http-request auth realm Dev if !AuthOkay_Dev{{ range $host, $containers := groupByMulti $ "Env.VIRTUAL_HOST" "," }}
+  acl is_{{ (sha1 $host) }} hdr(host) -i {{$host}}
+  use_backend out_{{ (sha1 $host) }} if is_{{ (sha1 $host) }}{{ end }}
+  
+{{ range $host, $containers := groupByMulti $ "Env.VIRTUAL_HOST" "," }}
+backend out_{{ (sha1 $host) }}
+  balance roundrobin{{ range $container := $containers }}{{ $addrLen := len $container.Addresses }}
+  {{ if eq $addrLen 1 }}{{ with $address := index $container.Addresses 0 }}server {{ $container.Name }} {{ $address.IP }}:{{ $address.Port }} check{{ end }}{{ else if $container.Env.VIRTUAL_PORT }}{{ range $address := .Addresses }}{{ if eq $address.Port $container.Env.VIRTUAL_PORT }}server {{ $container.Name }} {{ $address.IP }}:{{ $address.Port }} check{{ end }}{{ end }}{{ else }}{{ range $address := $container.Addresses }}{{ if eq $address.Port "80" }}server {{ $container.Name }} {{ $address.IP }}:{{ $address.Port }} check{{ end }}{{ end }}{{ end }}{{ end }}
+{{ end }}
