@@ -6,10 +6,20 @@ dockergen:
   volumes:
     - "/var/run/docker.sock:/tmp/docker.sock:ro"
     - "/data/dproxy/templates:/etc/docker-gen/templates"
+
+mailcatcher:
+  build: ./mailcatcher
+  ports:
+    - "1080"
+
 haproxy:
   image: vixns/haproxy:1.5.12
+  links:
+    - mailcatcher
   volumes:
     - "/data/dproxy/config:/etc/haproxy"
   ports:
     - "0.0.0.0:80:80"
+    - "0.0.0.0:1080:1080"
     - "0.0.0.0:9302:9302"
+
