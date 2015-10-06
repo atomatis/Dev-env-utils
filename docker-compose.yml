@@ -1,4 +1,5 @@
 dockergen:
+  restart: always
   image: jwilder/docker-gen
   command: -notify-sighup dproxy_haproxy_1 -watch -only-published /etc/docker-gen/templates/haproxy.tmpl /etc/haproxy/haproxy.cfg
   volumes_from:
@@ -7,13 +8,15 @@ dockergen:
     - "/var/run/docker.sock:/tmp/docker.sock:ro"
     - "/data/dproxy/templates:/etc/docker-gen/templates"
 
-mailcatcher:
+mailcatcher: 
   build: ./mailcatcher
+  restart: always
   ports:
     - "1080"
 
 haproxy:
-  image: vixns/haproxy:1.5.12
+  image: vixns/haproxy
+  restart: always
   links:
     - mailcatcher
   volumes:
