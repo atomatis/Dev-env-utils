@@ -4,7 +4,7 @@ Dproxy permet de trvailler en // sur de multiples projets utilisant docker.
 
 ## Installation
 
-	git clone gitlab@gitlab.smol.org:smol/dproxy.git ~/Development/dproxy
+	git clone gitlab@gitlab.smol.fr:smol/dproxy.git ~/Development/dproxy
 	cd ~/Development/dproxy
 	docker-compose up -d
 
