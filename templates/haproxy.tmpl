@@ -9,7 +9,8 @@ defaults
   option http-server-close
   option forwardfor
 
-listen monitor :::9302
+listen monitor 
+  bind :::9302
   mode http  
   stats enable
   stats uri /
@@ -18,7 +19,8 @@ listen monitor :::9302
 userlist UsersFor_Dev
   user dev insecure-password sm0l
 
-frontend mailcatcher :::1080
+frontend mailcatcher 
+  bind :::1080
   acl AuthOkay_Dev http_auth(UsersFor_Dev)
   http-request auth realm Dev if !AuthOkay_Dev
   use_backend mailcatcher
@@ -26,7 +28,8 @@ frontend mailcatcher :::1080
 backend mailcatcher
   server mailcatcher mailcatcher:1080
 
-frontend in :::80
+frontend in 
+  bind :::80
   acl AuthOkay_Dev http_auth(UsersFor_Dev)
   http-request auth realm Dev if !AuthOkay_Dev{{ range $host, $containers := groupByMulti $ "Env.VIRTUAL_HOST" "," }}{{ $vhost := (replace $host "."  "_" 20)  }}
   acl is_{{ $vhost }} hdr(host) -i {{$host}}
@@ -34,7 +37,10 @@ frontend in :::80
 
 {{ range $host, $containers := groupByMulti $ "Env.VIRTUAL_HOST" "," }}{{ $vhost := (replace $host "."  "_" 20)  }}
 backend {{ $vhost }}
-  balance roundrobin{{ range $container := $containers }}
-  {{ $addrLen := len $container.Addresses }}{{ if eq $addrLen 1 }}{{ with $address := index $container.Addresses 0 }}server {{ $container.Name }} {{ $address.IP }}:{{ $address.Port }} check{{ end }}{{ else if $container.Env.VIRTUAL_PORT }}{{ range $address := .Addresses }}{{ if eq $address.Port $container.Env.VIRTUAL_PORT }}server {{ $container.Name }} {{ $address.IP }}:{{ $address.Port }} check{{ end }}{{ end }}{{ else }}{{ range $address := $container.Addresses }}{{ if eq $address.Port "80" }}server {{ $container.Name }} {{ $address.IP }}:{{ $address.Port }} check{{ end }}{{ end }}{{ end }}{{ end }}
-{{ end }}
-
+  balance roundrobin
+  {{ range $container := $containers }}
+  {{ $network := (index (where $container.Networks "Name" "proxy") 0)}}
+  {{ $port := or ($container.Env.VIRTUAL_PORT) "80" }}
+  {{ range $address := $container.Addresses }}
+  {{ if eq $address.Port $port }}server {{ $container.Name }} {{ $network.IP }}:{{ $address.Port }} {{$container.Env.VIRTUAL_OPTIONS | ""}} check
+{{ end }}{{ end }}{{ end }}{{ end }}

@@ -1,28 +1,53 @@
-dockergen:
-  restart: always
-  image: jwilder/docker-gen
-  command: -notify-sighup dproxy_haproxy_1 -watch -only-published /etc/docker-gen/templates/haproxy.tmpl /etc/haproxy/haproxy.cfg
-  volumes_from:
-    - haproxy
-  volumes:
-    - "/var/run/docker.sock:/tmp/docker.sock:ro"
-    - "/data/dproxy/templates:/etc/docker-gen/templates"
+version: '2'
+services:
+  dockergen:
+    restart: always
+    image: jwilder/docker-gen
+    command: -notify-sighup dproxy_haproxy_1 -watch -only-published /etc/docker-gen/templates/haproxy.tmpl /etc/haproxy/haproxy.cfg
+    volumes:
+      - "./config:/etc/haproxy"
+      - "/var/run/docker.sock:/tmp/docker.sock:ro"
+      - "./templates:/etc/docker-gen/templates"
 
-mailcatcher: 
-  build: ./mailcatcher
-  restart: always
-  ports:
-    - "1080"
+  mailcatcher: 
+    build: ./mailcatcher
+    networks:
+      - proxy
+      - smtp
+    restart: always
+    ports:
+      - "1080"
 
-haproxy:
-  image: vixns/haproxy
-  restart: always
-  links:
-    - mailcatcher
-  volumes:
-    - "/data/dproxy/config:/etc/haproxy"
-  ports:
-    - "0.0.0.0:80:80"
-    - "0.0.0.0:1080:1080"
-    - "0.0.0.0:9302:9302"
+  haproxy:
+    image: vixns/haproxy
+    restart: always
+    depends_on:
+      - dockergen  
+    volumes:
+      - "./config:/etc/haproxy"
+    links:
+      - "mailcatcher:mailcatcher"
+    networks:
+      - proxy
+    ports:
+      - "0.0.0.0:80:80"
+      - "0.0.0.0:1080:1080"
+      - "0.0.0.0:9302:9302"
 
+networks:
+  proxy:
+    external:
+      name: proxy
+  smtp:
+    external:
+      name: smtp
+#osd:
+#  image: openstorage/osd
+#  restart: always
+#  privileged: true
+#  volumes:
+#    - ./osd:/etc
+#    - /run/docker/plugins:/run/docker/plugins
+#    - /var/lib/osd/:/var/lib/osd/
+#    - /var/lib/openstorage/:/var/lib/openstorage/
+#  command: "-d -f /etc/config.yaml"
