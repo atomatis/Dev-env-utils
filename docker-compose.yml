@@ -22,6 +22,7 @@ services:
     labels:
       - interlock.hostname=mailcatcher
       - interlock.port=1080
+      - interlock.network=proxy
       - interlock.domain=docker
     restart: always
 
