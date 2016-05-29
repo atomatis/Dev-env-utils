@@ -10,7 +10,7 @@ global
   tune.ssl.default-dh-param {{ .Config.SSLDefaultDHParam }}
 
 userlist UsersFor_Dev
-  user dev insecure-password sm0l
+  user {{ .Config.AdminUser }} insecure-password {{ .Config.AdminPass}}
 
 defaults
   mode http
