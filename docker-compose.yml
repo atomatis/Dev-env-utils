@@ -10,6 +10,7 @@ services:
       - proxy
     volumes:
       - ./config.toml:/bin/config.toml
+      - ./templates:/templates
       - /var/run/docker.sock:/var/run/docker.sock
 
   mailcatcher: 
@@ -37,7 +38,6 @@ services:
       - proxy
     ports:
       - "80:80"
-      - "9302:9302"
 
 networks:
   proxy:

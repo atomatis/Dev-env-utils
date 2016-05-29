@@ -5,6 +5,7 @@ dockerURL = "unix:///var/run/docker.sock"
     name = "haproxy"
     configPath = "/etc/haproxy/haproxy.cfg"
     pidPath = "/etc/haproxy.pid"
+    templatePath = "/templates/haproxy.cfg.template"
     BackendOverrideAddress = ""
     maxConn = 1024
     port = 80
