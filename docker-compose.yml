@@ -1,38 +1,42 @@
 version: '2'
 services:
-  dockergen:
+  interlock:
+    image: ehazlett/interlock:1.1.3
+    command: "-D run -c /bin/config.toml"
     restart: always
-    image: jwilder/docker-gen
-    command: -notify-sighup dproxy_haproxy_1 -watch -only-published /etc/docker-gen/templates/haproxy.tmpl /etc/haproxy/haproxy.cfg
+    ports:
+        - 8080
+    networks:
+      - proxy
     volumes:
-      - "./config:/etc/haproxy"
-      - "/var/run/docker.sock:/tmp/docker.sock:ro"
-      - "./templates:/etc/docker-gen/templates"
+      - ./config.toml:/bin/config.toml
+      - /var/run/docker.sock:/var/run/docker.sock
 
   mailcatcher: 
     build: ./mailcatcher
     networks:
       - proxy
       - smtp
-    restart: always
     ports:
       - "1080"
+    labels:
+      - interlock.hostname=mailcatcher
+      - interlock.port=1080
+      - interlock.domain=docker
+    restart: always
 
   haproxy:
     image: vixns/haproxy
     restart: always
-    depends_on:
-      - dockergen  
     volumes:
-      - "./config:/etc/haproxy"
-    links:
-      - "mailcatcher:mailcatcher"
+      - "./haproxy:/etc/haproxy"
+    labels:
+      - "interlock.ext.name=haproxy"
     networks:
       - proxy
     ports:
-      - "0.0.0.0:80:80"
-      - "0.0.0.0:1080:1080"
-      - "0.0.0.0:9302:9302"
+      - "80:80"
+      - "9302:9302"
 
 networks:
   proxy:
@@ -41,13 +45,3 @@ networks:
   smtp:
     external:
       name: smtp
-#osd:
-#  image: openstorage/osd
-#  restart: always
-#  privileged: true
-#  volumes:
-#    - ./osd:/etc
-#    - /run/docker/plugins:/run/docker/plugins
-#    - /var/lib/osd/:/var/lib/osd/
-#    - /var/lib/openstorage/:/var/lib/openstorage/
-#  command: "-d -f /etc/config.yaml"
