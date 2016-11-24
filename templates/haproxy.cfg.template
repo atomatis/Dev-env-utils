@@ -9,8 +9,8 @@ global
   ssl-server-verify {{ .Config.SSLServerVerify }}
   tune.ssl.default-dh-param {{ .Config.SSLDefaultDHParam }}
 
-userlist UsersFor_Dev
-  user {{ .Config.AdminUser }} insecure-password {{ .Config.AdminPass}}
+{{ if .Config.AdminPass }}userlist UsersFor_Dev
+  user {{ .Config.AdminUser }} insecure-password {{ .Config.AdminPass}}{{ end }}
 
 defaults
   mode http
@@ -20,9 +20,9 @@ defaults
   option dontlognull
   option http-server-close
   option forwardfor
-  timeout connect {{ .Config.ConnectTimeout }}
-  timeout client {{ .Config.ClientTimeout }}
-  timeout server {{ .Config.ServerTimeout }}
+  timeout connect 10000
+  timeout client 600000
+  timeout server 600000
 
 frontend http-default
   bind *:{{ .Config.Port }}
@@ -33,8 +33,8 @@ frontend http-default
   stats enable
   stats uri /haproxy?stats
   stats refresh 5s
-  acl AuthOkay_Dev http_auth(UsersFor_Dev)
-  http-request auth realm Dev if !AuthOkay_Dev
+  {{ if .Config.AdminPass }}acl AuthOkay_Dev http_auth(UsersFor_Dev)
+  http-request auth realm Dev if !AuthOkay_Dev{{ end }}
   {{ range $host := .Hosts }}{{ if ne $host.ContextRoot.Path "" }}acl url{{ $host.ContextRoot.Name }} path_beg {{ $host.ContextRoot.Path }}
   use_backend ctx{{ $host.ContextRoot.Name }} if url{{ $host.ContextRoot.Name }}{{ else }}
   acl is_{{ $host.Name }} hdr_beg(host) {{ $host.Domain }}

@@ -9,6 +9,8 @@ dockerURL = "unix:///var/run/docker.sock"
     BackendOverrideAddress = ""
     maxConn = 1024
     port = 80
-    adminUser = "dev"
-    adminPass = "sm0l"
+    SSLPort= 443
+    SSLCert = "/etc/haproxy/default.pem"
+    #adminUser = "dev"
+    #adminPass = "changeme"
 
