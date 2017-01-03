@@ -50,7 +50,7 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
-  mailcatcher (= 0.6.4)
+  mailcatcher (= 0.6.5)
 
 BUNDLED WITH
    1.12.1

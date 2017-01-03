@@ -1,2 +1,2 @@
 source 'https://rubygems.org'
-gem 'mailcatcher', '0.6.4'
+gem 'mailcatcher', '0.6.5'
