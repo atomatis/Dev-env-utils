@@ -13,6 +13,22 @@ services:
       - ./templates:/templates
       - /var/run/docker.sock:/var/run/docker.sock
 
+  portainer:
+    image: portainer/portainer
+    restart: always
+    ports:
+        - 9000
+    networks:
+      - proxy
+    volumes:
+      - ./portainer:/data
+      - /var/run/docker.sock:/var/run/docker.sock
+    labels:
+      - interlock.hostname=portainer
+      - interlock.port=9000
+      - interlock.network=proxy
+      - interlock.domain=docker
+
   mailcatcher: 
     build: ./mailcatcher
     networks:
@@ -24,7 +40,7 @@ services:
       - interlock.hostname=mailcatcher
       - interlock.port=1080
       - interlock.network=proxy
-      - interlock.domain=dev.me
+      - interlock.domain=docker
     restart: always
 
   haproxy:

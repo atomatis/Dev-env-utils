@@ -2,3 +2,5 @@ config
 haproxy
 .srl
 config.toml
+docker-compose.yml
+portainer

@@ -19,6 +19,7 @@ defaults
   option httplog
   option dontlognull
   option http-server-close
+  option http-keep-alive
   option forwardfor
   timeout connect 10000
   timeout client 600000
