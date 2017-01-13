@@ -34,8 +34,9 @@ frontend http-default
   stats enable
   stats uri /haproxy?stats
   stats refresh 5s
+  acl is_portainer hdr_beg(host) portainer
   {{ if .Config.AdminPass }}acl AuthOkay_Dev http_auth(UsersFor_Dev)
-  http-request auth realm Dev if !AuthOkay_Dev{{ end }}
+  http-request auth realm Dev if !AuthOkay_Dev !is_portainer{{ end }}
   {{ range $host := .Hosts }}{{ if ne $host.ContextRoot.Path "" }}acl url{{ $host.ContextRoot.Name }} path_beg {{ $host.ContextRoot.Path }}
   use_backend ctx{{ $host.ContextRoot.Name }} if url{{ $host.ContextRoot.Name }}{{ else }}
   acl is_{{ $host.Name }} hdr_beg(host) {{ $host.Domain }}
