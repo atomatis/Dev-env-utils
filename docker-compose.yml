@@ -1,7 +1,7 @@
 version: '2'
 services:
   interlock:
-    image: ehazlett/interlock:1.3.0
+    image: vixns/interlock:haproxy_reload
     command: "-D run -c /bin/config.toml"
     restart: always
     ports:
@@ -13,21 +13,21 @@ services:
       - ./templates:/templates
       - /var/run/docker.sock:/var/run/docker.sock
 
-  portainer:
-    image: portainer/portainer
-    restart: always
-    ports:
-      - 9000
-    networks:
-      - proxy
-    volumes:
-      - ./portainer:/data
-      - /var/run/docker.sock:/var/run/docker.sock
-    labels:
-      - interlock.hostname=portainer
-      - interlock.port=9000
-      - interlock.network=proxy
-      - interlock.domain=${DOMAIN}
+  #portainer:
+  #  image: portainer/portainer
+  #  restart: always
+  #  ports:
+  #    - 9000
+  #  networks:
+  #    - proxy
+  #  volumes:
+  #    - ./portainer:/data
+  #    - /var/run/docker.sock:/var/run/docker.sock
+  #  labels:
+  #    interlock.hostname: portainer
+  #    interlock.port: "9000"
+  #    interlock.network: proxy
+  #    interlock.domain: "${DOMAIN}"
 
   mailcatcher:
     image: mailhog/mailhog
@@ -40,19 +40,19 @@ services:
     environment:
       - MH_SMTP_BIND_ADDR=0.0.0.0:25
     labels:
-      - interlock.hostname=mailcatcher
-      - interlock.port=8025
-      - interlock.network=proxy
-      - interlock.domain=${DOMAIN}
+      interlock.hostname: mailcatcher
+      interlock.port: "8025"
+      interlock.network: proxy
+      interlock.domain: ${DOMAIN}
     restart: always
 
   haproxy:
-    image: vixns/haproxy
+    image: haproxy:alpine
     restart: always
     volumes:
-      - "./haproxy:/etc/haproxy"
+      - "./haproxy:/usr/local/etc/haproxy"
     labels:
-      - "interlock.ext.name=haproxy"
+      interlock.ext.name: haproxy
     networks:
       - proxy
     ports:

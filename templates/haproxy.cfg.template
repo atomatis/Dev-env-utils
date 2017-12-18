@@ -1,13 +1,13 @@
 # managed by interlock
 global
   log 127.0.0.1 local0
-  log 127.0.0.1 local1 notice
   {{ if .Config.SyslogAddr }}log {{ .Config.SyslogAddr }} local0
   log-send-hostname{{ end }}
   maxconn {{ .Config.MaxConn }}
   pidfile {{ .Config.PidPath }}
   ssl-server-verify {{ .Config.SSLServerVerify }}
   tune.ssl.default-dh-param {{ .Config.SSLDefaultDHParam }}
+  stats socket /haproxy.socket expose-fd listeners
 
 {{ if .Config.AdminPass }}userlist UsersFor_Dev
   user {{ .Config.AdminUser }} insecure-password {{ .Config.AdminPass}}{{ end }}
