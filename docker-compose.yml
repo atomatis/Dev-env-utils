@@ -1,33 +1,18 @@
-version: '2'
+version: '3'
 services:
-  interlock:
-    image: vixns/interlock:haproxy_reload
-    command: "-D run -c /bin/config.toml"
-    restart: always
-    ports:
-        - 8080
+  reverse-proxy:
+    image: traefik # The official Traefik docker image
+    command: --api --docker --docker.network=proxy --defaultEntryPoints='http,https' \
+      --entryPoints='Name:http Address::80' \
+      --entryPoints='Name:https Address::443 TLS'
     networks:
       - proxy
+    ports:
+      - "${HTTP_PORT}:80"
+      - "${HTTPS_PORT}:443"
+      - "8080:8080" # The Web UI (enabled by --api)
     volumes:
-      - ./config.toml:/bin/config.toml
-      - ./templates:/templates
       - /var/run/docker.sock:/var/run/docker.sock
-
-  #portainer:
-  #  image: portainer/portainer
-  #  restart: always
-  #  ports:
-  #    - 9000
-  #  networks:
-  #    - proxy
-  #  volumes:
-  #    - ./portainer:/data
-  #    - /var/run/docker.sock:/var/run/docker.sock
-  #  labels:
-  #    interlock.hostname: portainer
-  #    interlock.port: "9000"
-  #    interlock.network: proxy
-  #    interlock.domain: "${DOMAIN}"
 
   mailcatcher:
     image: mailhog/mailhog
@@ -37,27 +22,13 @@ services:
       - proxy
     ports:
       - 8025
+      - "0.0.0.0:1025:25"
     environment:
       - MH_SMTP_BIND_ADDR=0.0.0.0:25
     labels:
-      interlock.hostname: mailcatcher
-      interlock.port: "8025"
-      interlock.network: proxy
-      interlock.domain: ${DOMAIN}
+      - "traefik.port=8025"
+      - "traefik.frontend.rule=Host:mailcatcher.${DOMAIN}"
     restart: always
-
-  haproxy:
-    image: haproxy:alpine
-    restart: always
-    volumes:
-      - "./haproxy:/usr/local/etc/haproxy"
-    labels:
-      interlock.ext.name: haproxy
-    networks:
-      - proxy
-    ports:
-      - "${HTTP_PORT}:80"
-      - "${HTTPS_PORT}:443"
 
 networks:
   proxy:
