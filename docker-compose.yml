@@ -13,6 +13,9 @@ services:
       - "8080:8080" # The Web UI (enabled by --api)
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+    labels:
+    - "traefik.port=8080"
+    - "traefik.frontend.rule=Host:traefik.${DOMAIN}"
 
   mailcatcher:
     image: mailhog/mailhog
