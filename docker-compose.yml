@@ -1,38 +1,45 @@
-version: '3'
+version: '3.7'
+
 services:
   reverse-proxy:
-    image: traefik:1.7 # The official Traefik docker image
-    command: --api --docker --docker.network=proxy --defaultEntryPoints='http,https' \
-      --entryPoints='Name:http Address::80' \
-      --entryPoints='Name:https Address::443 TLS'
-    networks:
-      - proxy
+    image: traefik:chevrotin
+    container_name: traefik-reverse-proxy
+    restart: unless-stopped
     ports:
-      - "${HTTP_PORT}:80"
-      - "${HTTPS_PORT}:443"
-      - "8080:8080" # The Web UI (enabled by --api)
+    - 80:80
+    - 443:443
+    - 8080:8080
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
+    - /var/run/docker.sock:/var/run/docker.sock:ro
+    - ./traefik.toml:/traefik.toml
+    - ./configuration:/configuration
+    - ./certs:/certs
+    networks:
+    - proxy
     labels:
-    - "traefik.port=8080"
-    - "traefik.frontend.rule=Host:traefik.${DOMAIN}"
-    restart: always
+    - traefik.enable=true
+    - traefik.http.routers.traefik.rule=Host(`traefik.${PROXY_DOMAIN}`)
+    - traefik.http.routers.traefik.entryPoints=insecure
+    - traefik.http.services.traefik.loadbalancer.server.port=8080
 
-  mailcatcher:
+  mailtester:
     image: mailhog/mailhog
+    container_name: mailhog-mail-tester
+    restart: unless-stopped
     user: root
     networks:
-      - smtp
-      - proxy
+    - smtp
+    - proxy
     ports:
-      - 8025
-      - "0.0.0.0:1025:25"
+    - 8025
+    - "0.0.0.0:1025:25"
     environment:
-      - MH_SMTP_BIND_ADDR=0.0.0.0:25
+    - MH_SMTP_BIND_ADDR=0.0.0.0:25
     labels:
-      - "traefik.port=8025"
-      - "traefik.frontend.rule=Host:mailcatcher.${DOMAIN}"
-    restart: always
+    - traefik.enable=true
+    - traefik.http.routers.mailhog.rule=Host(`mailhog.${PROXY_DOMAIN}`)
+    - traefik.http.routers.mailhog.entryPoints=insecure
+    - traefik.http.services.mailhog.loadbalancer.server.port=8025
 
 networks:
   proxy:

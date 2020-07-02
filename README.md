@@ -1,103 +1,77 @@
-# Dproxy
-
-Basé sur le [repo éponyme](https://gitlab.smol.fr/smol/dproxy/-/tree/traefik) de Vixns
+# Dev env utils
 
 Un reverse proxy basé sur Traefik.
 
 Cela permet d'acceder à ses projets http/https en local en passant par une url du type http://mon-projet.mon-domain.
 
-Dans cette documentation, [[MY-DOMAIN]] doit être remplacé par le domain locale souhaité (comme localhost ou myname.kangourouge.com)
+Dans cette documentation, [[MY-DOMAIN]] doit être remplacé par le domain locale souhaité (comme mylocal ou myname.kangourouge.com)
 
-## Configuration
+## Prérequis
 
-Il faut configurer Dnsmasq pour utiliser des domaines en local.
+- [Dnsmasq](./doc/dns_config.md) avec un domain sur lequel pointer en locale
+- [Mkcert](./doc/mkcert.md) pour générer un certificat https (optionel, https)
 
-
-**Installation sur OSX avec brew:**
-
-```bash
-# install dnsmasq
-brew install dnsmasq
-
-# Create config folder if it doesn’t already exist
-mkdir -pv $(brew --prefix)/etc/
-
-# Configure dnsmasq for *.[[MY-DOMAIN]]
-echo 'address=/.[[MY-DOMAIN]]/127.0.0.1' >> $(brew --prefix)/etc/dnsmasq.conf
-
-# MacOS High Sierra ONLY!
-echo 'port=53' >> $(brew --prefix)/etc/dnsmasq.conf
-
-# Start dnsmasq as a service so it automatically starts at login
-sudo brew services start dnsmasq
-
-# Create a dns resolver
-sudo mkdir -v /etc/resolver
-sudo bash -c 'echo “nameserver 127.0.0.1” > /etc/resolver/[[MY-DOMAIN]]'
-```
-
-**Vérifier l'instalation:**
-
-Avec Scutil
-
-```bash
-scutil --dns
-```
-Vous devriez voir ces lignes.
-```bash
-resolver #8
-
-domain   : [[MY-DOMAIN]]
-
-nameserver[0] : 127.0.0.1
-
-flags    : Request A records, Request AAAA records
-
-reach    : 0x00030002 (Reachable,Local Address,Directly Reachable Address)
-```
-
-Avec ping
-```bash
-ping foo.[[MY-DOMAIN]]
-```
-Donne
-```bash
-PING foo.[[MY-DOMAIN]] (127.0.0.1): 56 data bytes
-64 bytes from 127.0.0.1: icmp_seq=0 ttl=64 time=0.027 ms
-64 bytes from 127.0.0.1: icmp_seq=1 ttl=64 time=0.043 ms
-...
-```
 
 ## Installation
 
+**Configurer le .env**
+
 ```bash
-cp env.dist .env
-# Remplacer le DOMAIN dans le fichier .env par votre domain set dans le dnsmasq
+cp .env.dist .env
+# remplace la valeur par défault par le domaine locale.
+sed -i "" "s#CHANGE_ME#$[[MY-DOMAIN]]#g" .env
+```
+
+**Générer le certificat (optionel, https)**
+
+```bash
+mkcert -cert-file certs/default-cert.pem -key-file certs/default-key.pem "[[MY-DOMAIN]]" "*.[[MY-DOMAIN]]"
+```
+
+**Lancer les containers**
+
+```bash
 docker-compose up -d
 ```
 
 ## Usage
 
 **Accéder au Dashbord de Traefik**
+    
 
-https://traefik.[[MY-DOMAIN]]/dashboard
+[Via localhost](localhost:8080)
 
-**Avec docker-compose**
+ou   
 
-Dans votre docker-compose.yml
+traefik.[[MY-DOMAIN]]
+
+**Accéder au Dashbord de Mailhog**
+    
+[Via localhost](localhost:8025)
+
+ou 
+
+mailhog.[[MY-DOMAIN]]
+
+**Lier un projet avec docker-compose (générique)**
+
 ```yaml
+# docker-composer.yaml
+
 services:
   mon-service-1:
     image: php-apache
     ports:
     - 80
-    - 443
     labels:
-    # Optionel si un seul port exposé
-    - traefik.port=443
-    # Determine l'url. Ici https://mon-service-php-apache.[[MY-DOMAIN]]
-    - traefik.frontend.rule=Host:mon-service-php-apache.[[MY-DOMAIN]]
-    # Ne pas oubier d'ajouter proxy dans les network!
+    # Activer Traefik
+    - traefik.enable=true
+    
+    # Accès http
+    - traefik.http.routers.[[MY-SERVICE-1]]-http.rule=Host(`[[MY-SERVICE-1]].[[MY-DOMAIN]]`)
+    - traefik.http.routers.[[MY-SERVICE-1]]-http.entryPoints=insecure
+    
+    # Requis
     networks:
     - proxy
 
@@ -106,7 +80,9 @@ services:
     ports:
     - 3000
     labels:
-    - traefik.frontend.rule=Host:mon-service-front.[[MY-DOMAIN]]
+    - traefik.enable=true
+    - traefik.http.routers.[[MY-SERVICE-2]]-http.rule=Host(`[[MY-SERVICE-2]].[[MY-DOMAIN]]`)
+    - traefik.http.routers.[[MY-SERVICE-2]]-http.entryPoints=insecure
     networks:
     - proxy
     
@@ -119,12 +95,15 @@ networks:
       name: proxy
 ```
 
+**Voir [ici](./doc/traefik_https.md) pour https et [ici](./doc/traefik_port.md) pour des problèmes de port**
+
 **Aller plus loin**
 
-La [documentation](https://docs.traefik.io/v1.7) de Traefik
+La [documentation](https://docs.traefik.io/v2.2) de Traefik
 
 ## Limites connues
 
 **sql:**  
 Traefik est un reverse proxy http/https. 
-Il ne peut donc pas fournir d'addresse pour une base de donnée sql comme postgres par exemple.
+Il ne peut donc pas fournir d'adresse pour une base de donnée sql comme postgres par exemple.
+

@@ -1,0 +1,37 @@
+[global]
+  sendAnonymousUsage = false
+
+[log]
+  level = "DEBUG"
+  format = "common"
+
+[api]
+  dashboard = true
+  debug = false
+  insecure = true
+
+[entryPoints]
+  [entryPoints.insecure]
+    address = ":80"
+  [entryPoints.secure]
+    address = ":443"
+
+[providers]
+  [providers.file]
+    directory = "/configuration/"
+    watch = true
+
+  [providers.docker]
+    endpoint = "unix:///var/run/docker.sock"
+    watch = true
+    network = "proxy"
+    exposedByDefault = true
+    swarmMode = false
+    [docker.tls]
+      cert = "/certs/docker-cert.pem"
+      key = "/certs/docker-key.pem"
+
+[http]
+  [http.middlewares.https-redirect.redirectScheme]
+    scheme = "https"
+    permanent = true
