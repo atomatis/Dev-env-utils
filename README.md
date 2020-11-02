@@ -28,6 +28,12 @@ sed -i "" "s#CHANGE_ME#$[[MY-DOMAIN]]#g" .env
 mkcert -cert-file certs/default-cert.pem -key-file certs/default-key.pem "[[MY-DOMAIN]]" "*.[[MY-DOMAIN]]"
 ```
 
+*Créer les networks pour dockers***
+```bash
+    docker network create proxy
+    docker network create smtp
+```
+
 **Lancer les containers**
 
 ```bash
